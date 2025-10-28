@@ -168,6 +168,37 @@ def main(page: ft.Page):
     conn = get_conn()
     cur = conn.cursor()
 
+    # ---------- Helper: AppBar com botão Voltar persistente ----------
+    current_back_handler = None
+
+    def set_appbar(title: str, bgcolor=None, show_back: bool = False, on_back=None):
+        nonlocal current_back_handler
+        if show_back:
+            current_back_handler = on_back or go_home
+            leading = ft.IconButton(
+                icon=ft.Icons.ARROW_BACK,
+                tooltip="Voltar",
+                on_click=lambda e: current_back_handler(e),
+            )
+        else:
+            current_back_handler = None
+            leading = None
+        page.appbar = ft.AppBar(
+            leading=leading,
+            title=ft.Text(title),
+            center_title=True,
+            bgcolor=bgcolor,
+        )
+        # Acessibilidade: tecla Esc volta quando disponível
+        def _on_kb(ev: ft.KeyboardEvent):
+            if ev.key == "Escape" and current_back_handler:
+                try:
+                    current_back_handler(ev)
+                except Exception:
+                    pass
+        page.on_keyboard_event = _on_kb
+        page.update()
+
     def contagem():
         cur.execute("SELECT COUNT(*) FROM ALUNO;"); a = cur.fetchone()[0]
         cur.execute("SELECT COUNT(*) FROM PLANO;"); p = cur.fetchone()[0]
@@ -178,7 +209,7 @@ def main(page: ft.Page):
     def go_home(_=None):
         page.clean()
         a, p, s = contagem()
-        page.appbar = ft.AppBar(title=ft.Text("Checklist de Treino"), center_title=True, bgcolor=ft.Colors.BLUE_GREY_800)
+        set_appbar("Checklist de Treino", ft.Colors.BLUE_GREY_800, show_back=False)
 
         card = ft.Card(
             content=ft.Container(
@@ -237,7 +268,7 @@ def main(page: ft.Page):
     # ---------------- Alunos ----------------
     def tela_alunos():
         page.clean()
-        page.appbar = ft.AppBar(title=ft.Text("Alunos"), center_title=True, bgcolor=ft.Colors.GREEN_700)
+        set_appbar("Alunos", ft.Colors.GREEN_700, show_back=True, on_back=go_home)
 
         nome = ft.TextField(label="Nome do Aluno", width=360)
         data = ft.TextField(label="Nascimento (DD/MM/YYYY)", width=180, max_length=10)
@@ -331,7 +362,6 @@ def main(page: ft.Page):
                         ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                         status,
                         ft.Container(content=lista, height=360, border=ft.border.all(1, ft.Colors.BLUE_200), border_radius=10, padding=6),
-                        ft.ElevatedButton("Voltar", icon=ft.Icons.ARROW_BACK, on_click=go_home),
                     ],
                 )
             )
@@ -341,7 +371,7 @@ def main(page: ft.Page):
     # ---------------- Exercícios ----------------
     def tela_exercicios():
         page.clean()
-        page.appbar = ft.AppBar(title=ft.Text("Exercícios"), center_title=True, bgcolor=ft.Colors.BLUE_700)
+        set_appbar("Exercícios", ft.Colors.BLUE_700, show_back=True, on_back=go_home)
 
         nome = ft.TextField(label="Nome do exercício", width=360)
         grupo = ft.TextField(label="Grupo muscular", width=220, hint_text="Peito, Costas, Pernas…")
@@ -412,7 +442,6 @@ def main(page: ft.Page):
                         ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                         status,
                         ft.Container(content=lista, height=400, border=ft.border.all(1, ft.Colors.BLUE_200), border_radius=10, padding=6),
-                        ft.ElevatedButton("Voltar", icon=ft.Icons.ARROW_BACK, on_click=go_home),
                     ],
                 )
             )
@@ -422,7 +451,7 @@ def main(page: ft.Page):
     # ---------------- Planos ----------------
     def tela_planos():
         page.clean()
-        page.appbar = ft.AppBar(title=ft.Text("Planos de Treino"), center_title=True, bgcolor=ft.Colors.PURPLE_700)
+        set_appbar("Planos de Treino", ft.Colors.PURPLE_700, show_back=True, on_back=go_home)
 
         nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", width=260)
         busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, width=360)
@@ -596,7 +625,6 @@ def main(page: ft.Page):
                         ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                         status,
                         ft.Container(content=lista, height=400, border=ft.border.all(1, ft.Colors.PURPLE_200), border_radius=10, padding=6),
-                        ft.ElevatedButton("Voltar", icon=ft.Icons.ARROW_BACK, on_click=go_home),
                     ],
                 )
             )
@@ -606,7 +634,7 @@ def main(page: ft.Page):
     # ---------------- Iniciar Treino (Checklist) ----------------
     def tela_iniciar_treino():
         page.clean()
-        page.appbar = ft.AppBar(title=ft.Text("Iniciar Treino – Checklist"), center_title=True, bgcolor=ft.Colors.ORANGE_700)
+        set_appbar("Iniciar Treino – Checklist", ft.Colors.ORANGE_700, show_back=True, on_back=go_home)
 
         busca_aluno = ft.TextField(label="Buscar aluno", width=360, prefix_icon=ft.Icons.SEARCH)
         dd_aluno = ft.Dropdown(label="Aluno", width=360)
@@ -751,7 +779,6 @@ def main(page: ft.Page):
                             controls=[
                                 ft.ElevatedButton("Carregar exercícios", icon=ft.Icons.LIST, on_click=lambda e: load_checklist()),
                                 ft.ElevatedButton("Salvar sessão", icon=ft.Icons.SAVE, on_click=salvar_sessao),
-                                ft.ElevatedButton("Voltar", icon=ft.Icons.ARROW_BACK, on_click=go_home),
                             ],
                         ),
                     ],
@@ -763,7 +790,7 @@ def main(page: ft.Page):
     # ---------------- Relatório de Sessões ----------------
     def tela_relatorio_sessoes():
         page.clean()
-        page.appbar = ft.AppBar(title=ft.Text("Relatório de Sessões"), center_title=True, bgcolor=ft.Colors.BLUE_GREY_700)
+        set_appbar("Relatório de Sessões", ft.Colors.BLUE_GREY_700, show_back=True, on_back=go_home)
 
         busca_aluno = ft.TextField(label="Filtrar por nome do aluno", prefix_icon=ft.Icons.SEARCH, width=480)
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
@@ -889,7 +916,6 @@ def main(page: ft.Page):
                         ft.Row([busca_aluno], alignment=ft.MainAxisAlignment.CENTER),
                         status,
                         ft.Container(content=lista, height=420, border=ft.border.all(1, ft.Colors.BLUE_GREY_200), border_radius=10, padding=6),
-                        ft.ElevatedButton("Voltar", icon=ft.Icons.ARROW_BACK, on_click=go_home),
                     ],
                 )
             )
