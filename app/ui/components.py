@@ -3,6 +3,7 @@ from app.config import Theme
 
 
 def with_bg(content: ft.Control, colors=None) -> ft.Container:
+    # Wrapper com gradiente e rolagem para evitar conteúdo oculto em janelas menores
     return ft.Container(
         expand=True,
         padding=20,
@@ -11,7 +12,14 @@ def with_bg(content: ft.Control, colors=None) -> ft.Container:
             end=ft.alignment.bottom_right,
             colors=colors or Theme.BG_GRADIENT,
         ),
-        content=ft.Container(alignment=ft.alignment.center, content=content),
+        content=ft.Container(
+            alignment=ft.alignment.top_center,
+            content=ft.Column(
+                controls=[content],
+                scroll=ft.ScrollMode.AUTO,
+                spacing=0,
+            ),
+        ),
     )
 
 
@@ -19,10 +27,15 @@ def set_appbar(page: ft.Page, title: str, bgcolor=None, show_back: bool = False,
     # Armazena handler no objeto page para permitir tecla ESC voltar
     if show_back and on_back:
         page._back_handler = on_back
-        leading = ft.IconButton(
-            icon=ft.Icons.ARROW_BACK,
-            tooltip="Voltar",
-            on_click=lambda e: on_back(e),
+        # Aumenta a área clicável do botão Voltar para evitar problemas de clique
+        leading = ft.Container(
+            padding=8,
+            content=ft.IconButton(
+                icon=ft.Icons.ARROW_BACK,
+                icon_size=28,
+                tooltip="Voltar",
+                on_click=lambda e: on_back(e),
+            ),
         )
     else:
         page._back_handler = None

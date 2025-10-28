@@ -19,10 +19,18 @@ def init_db():
             ID_ALUNO        INTEGER PRIMARY KEY AUTOINCREMENT,
             NOME            TEXT NOT NULL,
             DATA_NASC       TEXT NOT NULL,
-            ALTURA_M        REAL
+            ALTURA_M        REAL,
+            PESO_KG         REAL
         );
     """
     )
+
+    # Migração: adicionar coluna PESO_KG se não existir
+    try:
+        cur.execute("SELECT PESO_KG FROM ALUNO LIMIT 1")
+    except Exception:
+        # Coluna não existe, adicionar
+        cur.execute("ALTER TABLE ALUNO ADD COLUMN PESO_KG REAL")
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS EXERCICIO (

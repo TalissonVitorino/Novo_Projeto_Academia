@@ -9,10 +9,10 @@ def show_treino(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Iniciar Treino – Checklist", ft.Colors.ORANGE_700, show_back=True, on_back=lambda e=None: on_back())
 
-    busca_aluno = ft.TextField(label="Buscar aluno", width=360, prefix_icon=ft.Icons.SEARCH)
-    dd_aluno = ft.Dropdown(label="Aluno", width=360)
-    dd_plano = ft.Dropdown(label="Plano", width=260)
-    data_tf = ft.TextField(label="Data (DD/MM/YYYY)", width=180, value=datetime.now().strftime("%d/%m/%Y"), max_length=10)
+    busca_aluno = ft.TextField(label="Buscar aluno", width=300, prefix_icon=ft.Icons.SEARCH)
+    dd_aluno = ft.Dropdown(label="Aluno", width=300)
+    dd_plano = ft.Dropdown(label="Plano", width=240)
+    data_tf = ft.TextField(label="Data (DD/MM/YYYY)", width=140, value=datetime.now().strftime("%d/%m/%Y"), max_length=10)
 
     lista_check = ft.Column(scroll=ft.ScrollMode.AUTO, height=320)
     status = ft.Text("", color=ft.Colors.ORANGE_200)
@@ -27,6 +27,11 @@ def show_treino(page: ft.Page, on_back):
         else:
             cur.execute("SELECT ID_ALUNO, NOME FROM ALUNO ORDER BY NOME")
         rows = cur.fetchall()
+        if not rows:
+            status.value = "Nenhum aluno cadastrado. Cadastre em 'Alunos'."
+            dd_aluno.value = None
+            page.update()
+            return
         for aid, an in rows:
             dd_aluno.options.append(ft.dropdown.Option(key=str(aid), text=f"{an} (ID {aid})"))
         dd_aluno.value = str(rows[0][0]) if rows else None
@@ -91,39 +96,50 @@ def show_treino(page: ft.Page, on_back):
             snack(page, "Selecione o aluno.", True); return
         if not dd_plano.value:
             snack(page, "Selecione o plano.", True); return
+        if not lista_check.controls:
+            snack(page, "Nenhum exercício carregado. Selecione um plano com exercícios.", True); return
         ok, iso = validar_data_brasil(data_tf.value)
         if not ok:
-            snack(page, "Data inválida.", True); return
+            snack(page, "Data inválida.", True); data_tf.focus(); return
         # criar sessão
-        cur.execute(
-            "INSERT INTO SESSAO (ID_ALUNO, ID_PLANO, DATA_SESSAO) VALUES (?,?,?)",
-            (int(dd_aluno.value), int(dd_plano.value), iso),
-        )
-        id_sessao = cur.lastrowid
-        total = 0
-        for card in lista_check.controls:
-            m = getattr(card, "_meta", None)
-            if not m:
-                continue
-            feito = 1 if m["chk"].value else 0
-            try:
-                s = int(m["series"].value) if m["series"].value else None
-                r = int(m["reps"].value) if m["reps"].value else None
-                p = float(m["peso"].value) if m["peso"].value else None
-            except Exception:
-                snack(page, "Valores numéricos inválidos (séries/reps/peso).", True); return
-            obs = (m["obs"].value or "").strip() or None
+        try:
             cur.execute(
-                """
-                INSERT INTO SESSAO_ITEM (ID_SESSAO, ID_EXERCICIO, FEITO, SERIES_FEITAS, REPS_MEDIA, PESO_MEDIA, OBS)
-                VALUES (?,?,?,?,?,?,?)
-                """,
-                (id_sessao, m["id_exercicio"], feito, s, r, p, obs),
+                "INSERT INTO SESSAO (ID_ALUNO, ID_PLANO, DATA_SESSAO) VALUES (?,?,?)",
+                (int(dd_aluno.value), int(dd_plano.value), iso),
             )
-            total += 1
-        conn.commit()
-        snack(page, f"Sessão registrada com {total} exercícios.")
-        lista_check.controls.clear(); status.value = ""; page.update()
+            id_sessao = cur.lastrowid
+            total = 0
+            for card in lista_check.controls:
+                m = getattr(card, "_meta", None)
+                if not m:
+                    continue
+                feito = 1 if m["chk"].value else 0
+                try:
+                    s = int(m["series"].value) if m["series"].value else None
+                    r = int(m["reps"].value) if m["reps"].value else None
+                    # aceitar vírgula ou ponto para decimais
+                    peso_str = m["peso"].value.strip() if m["peso"].value else ""
+                    if peso_str:
+                        peso_str = peso_str.replace(".", "").replace(",", ".") if peso_str.count(",") == 1 and peso_str.count(".") > 1 else peso_str.replace(",", ".")
+                    p = float(peso_str) if peso_str else None
+                except Exception:
+                    conn.rollback()
+                    snack(page, "Valores numéricos inválidos (séries/reps/peso).", True); return
+                obs = (m["obs"].value or "").strip() or None
+                cur.execute(
+                    """
+                    INSERT INTO SESSAO_ITEM (ID_SESSAO, ID_EXERCICIO, FEITO, SERIES_FEITAS, REPS_MEDIA, PESO_MEDIA, OBS)
+                    VALUES (?,?,?,?,?,?,?)
+                    """,
+                    (id_sessao, m["id_exercicio"], feito, s, r, p, obs),
+                )
+                total += 1
+            conn.commit()
+            snack(page, f"Sessão registrada com {total} exercícios.")
+            lista_check.controls.clear(); status.value = ""; page.update()
+        except Exception as ex:
+            conn.rollback()
+            snack(page, f"Erro ao salvar sessão: {ex}", True)
 
     busca_aluno.on_change = lambda e: load_alunos(busca_aluno.value)
     busca_aluno.on_submit = lambda e: load_alunos(busca_aluno.value)
@@ -137,7 +153,7 @@ def show_treino(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Iniciar Treino (Checklist)", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([busca_aluno, dd_aluno, dd_plano, data_tf], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
+                    ft.Row([busca_aluno, dd_aluno, dd_plano, data_tf], alignment=ft.MainAxisAlignment.CENTER, spacing=10, wrap=True, run_spacing=10),
                     status,
                     ft.Container(content=lista_check, height=360, border=ft.border.all(1, ft.Colors.ORANGE_200), border_radius=10, padding=6),
                     ft.Row(

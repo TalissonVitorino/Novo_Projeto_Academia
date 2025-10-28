@@ -36,6 +36,18 @@ def show_exercicios(page: ft.Page, on_back):
         rows = cur.fetchall()
         status.value = f"Total: {len(rows)}" if rows else "Nenhum exercício."
         for eid, enome, egrupo in rows:
+            def make_delete_button(exercicio_id, exercicio_nome):
+                return ft.Container(
+                    padding=6,
+                    content=ft.IconButton(
+                        icon=ft.Icons.DELETE,
+                        icon_color=ft.Colors.RED_400,
+                        icon_size=22,
+                        tooltip="Excluir",
+                        on_click=lambda e: confirmar_exclusao(exercicio_id, exercicio_nome),
+                    ),
+                )
+
             lista.controls.append(
                 ft.Card(
                     elevation=2,
@@ -46,17 +58,32 @@ def show_exercicios(page: ft.Page, on_back):
                             controls=[
                                 ft.Text(f"{egrupo}", width=140, weight=ft.FontWeight.BOLD),
                                 ft.Text(enome, expand=True),
-                                ft.IconButton(
-                                    icon=ft.Icons.DELETE,
-                                    icon_color=ft.Colors.RED_400,
-                                    tooltip="Excluir",
-                                    on_click=lambda e, _id=eid: del_exercicio(_id),
-                                ),
+                                make_delete_button(eid, enome),
                             ],
                         ),
                     ),
                 )
             )
+        page.update()
+
+    def confirmar_exclusao(_id, _nome):
+        def fechar_confirmacao(confirmar=False):
+            dlg_confirm.open = False
+            page.update()
+            if confirmar:
+                del_exercicio(_id)
+
+        dlg_confirm = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirmar exclusão"),
+            content=ft.Text(f"Tem certeza que deseja excluir o exercício '{_nome}'?"),
+            actions=[
+                ft.TextButton("Cancelar", on_click=lambda e: fechar_confirmacao(False)),
+                ft.TextButton("Excluir", on_click=lambda e: fechar_confirmacao(True)),
+            ],
+        )
+        page.dialog = dlg_confirm
+        dlg_confirm.open = True
         page.update()
 
     def del_exercicio(_id):
@@ -77,7 +104,7 @@ def show_exercicios(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Catálogo de Exercícios", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([nome, grupo, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER),
+                    ft.Row([nome, grupo, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True),
                     ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                     status,
                     ft.Container(content=lista, height=400, border=ft.border.all(1, ft.Colors.BLUE_200), border_radius=10, padding=6),

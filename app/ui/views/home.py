@@ -38,6 +38,8 @@ def show_home(
                     ft.Row(
                         alignment=ft.MainAxisAlignment.CENTER,
                         spacing=30,
+                        run_spacing=10,
+                        wrap=True,
                         controls=[
                             ft.Text(f"Alunos: {a}", size=16, color=ft.Colors.BLUE_300),
                             ft.Text(f"Planos: {p}", size=16, color=ft.Colors.GREEN_300),
@@ -47,7 +49,7 @@ def show_home(
                     ft.Container(height=12),
                     ft.Text("CADASTROS", size=18, weight=ft.FontWeight.BOLD, color=Theme.TEXT_TITLE),
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.CENTER, spacing=14,
+                        alignment=ft.MainAxisAlignment.CENTER, spacing=14, run_spacing=10, wrap=True,
                         controls=[
                             ft.ElevatedButton(
                                 "Alunos", icon=ft.Icons.PERSON, width=220,

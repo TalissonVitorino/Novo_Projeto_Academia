@@ -1,5 +1,5 @@
 import flet as ft
-from app.ui.components import with_bg, set_appbar
+from app.ui.components import with_bg, set_appbar, snack
 from app.db import get_conn
 from app.utils import sqlite_para_brasileiro
 
@@ -43,6 +43,22 @@ def show_relatorios(page: ft.Page, on_back):
         status.value = f"Total: {len(rows)}" if rows else "Nenhuma sessão."
         for sid, d, an, pn in rows:
             data_br = sqlite_para_brasileiro(d)
+
+            def make_buttons(sessao_id, info_str):
+                return [
+                    ft.TextButton("Detalhes", on_click=lambda e: detalhar(sessao_id)),
+                    ft.Container(
+                        padding=6,
+                        content=ft.IconButton(
+                            icon=ft.Icons.DELETE,
+                            icon_color=ft.Colors.RED_400,
+                            icon_size=22,
+                            tooltip="Excluir sessão",
+                            on_click=lambda e: confirmar_exclusao(sessao_id, info_str),
+                        ),
+                    ),
+                ]
+
             lista.controls.append(
                 ft.Card(
                     elevation=2,
@@ -55,14 +71,7 @@ def show_relatorios(page: ft.Page, on_back):
                                     controls=[
                                         ft.Text(f"#{sid} • {data_br}", weight=ft.FontWeight.BOLD),
                                         ft.Text(f"{an} – {pn}"),
-                                        ft.TextButton("Detalhes", on_click=lambda e, _sid=sid: detalhar(_sid)),
-                                        ft.IconButton(
-                                            icon=ft.Icons.DELETE,
-                                            icon_color=ft.Colors.RED_400,
-                                            tooltip="Excluir sessão",
-                                            on_click=lambda e, _sid=sid: excluir(_sid),
-                                        ),
-                                    ],
+                                    ] + make_buttons(sid, f"{an} – {pn} em {data_br}"),
                                 ),
                             ],
                         ),
@@ -73,7 +82,6 @@ def show_relatorios(page: ft.Page, on_back):
 
     def detalhar(_sid):
         dialog = ft.AlertDialog(modal=True)
-        page.overlay.append(dialog)
         corpo = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO, height=360)
 
         cur.execute(
@@ -95,19 +103,24 @@ def show_relatorios(page: ft.Page, on_back):
                 bgcolor=ft.Colors.GREEN_600 if feito else ft.Colors.GREY_600,
                 content=ft.Text("Feito" if feito else "Pendente", size=11, color=ft.Colors.WHITE),
             )
+            card_controls = [
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Text(f"{egrupo} – {enome}", expand=True, weight=ft.FontWeight.BOLD),
+                        ft.Text(f"Séries: {s or '-'}  Reps: {r or '-'}  Peso: {p or '-'}"),
+                        badge,
+                    ],
+                )
+            ]
+            if obs:
+                card_controls.append(ft.Text(f"Obs: {obs}", size=12, italic=True, color=ft.Colors.BLUE_GREY_300))
             corpo.controls.append(
                 ft.Card(
                     elevation=1,
                     content=ft.Container(
                         padding=8,
-                        content=ft.Row(
-                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            controls=[
-                                ft.Text(f"{egrupo} – {enome}", expand=True),
-                                ft.Text(f"Séries: {s or '-'}  Reps: {r or '-'}  Peso: {p or '-'}"),
-                                badge,
-                            ],
-                        ),
+                        content=ft.Column(spacing=4, controls=card_controls),
                     ),
                 )
             )
@@ -131,10 +144,35 @@ def show_relatorios(page: ft.Page, on_back):
         dialog.open = True
         page.update()
 
+    def confirmar_exclusao(_sid, _info):
+        def fechar_confirmacao(confirmar=False):
+            dlg_confirm.open = False
+            page.update()
+            if confirmar:
+                excluir(_sid)
+
+        dlg_confirm = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirmar exclusão"),
+            content=ft.Text(f"Tem certeza que deseja excluir a sessão #{_sid}?\n{_info}"),
+            actions=[
+                ft.TextButton("Cancelar", on_click=lambda e: fechar_confirmacao(False)),
+                ft.TextButton("Excluir", on_click=lambda e: fechar_confirmacao(True)),
+            ],
+        )
+        page.dialog = dlg_confirm
+        dlg_confirm.open = True
+        page.update()
+
     def excluir(_sid):
-        cur.execute("DELETE FROM SESSAO WHERE ID_SESSAO=?", (_sid,))
-        conn.commit()
-        carregar(busca_aluno.value)
+        try:
+            cur.execute("DELETE FROM SESSAO WHERE ID_SESSAO=?", (_sid,))
+            conn.commit()
+            snack(page, "Sessão excluída.")
+            carregar(busca_aluno.value)
+        except Exception as ex:
+            conn.rollback()
+            snack(page, f"Erro ao excluir sessão: {ex}", True)
 
     busca_aluno.on_change = lambda e: carregar(busca_aluno.value)
     busca_aluno.on_submit = lambda e: carregar(busca_aluno.value)
