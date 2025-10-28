@@ -1,156 +1,23 @@
 import flet as ft
-import os
-import sqlite3
 from datetime import datetime
 
-# =============== CONFIG / DB ===============
+# Centralized config and utilities
+from app.db import get_conn, init_db
+from app.config import Theme
+from app.utils import validar_data_brasil, sqlite_para_brasileiro, calcular_imc
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_DIR = os.path.join(BASE_DIR, "bd")
-DB_PATH = os.path.join(DB_DIR, "academia.db")
-os.makedirs(DB_DIR, exist_ok=True)
-
-def get_conn():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
-
-def init_db():
-    conn = get_conn()
-    cur = conn.cursor()
-
-    # ---- Núcleo
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS ALUNO (
-            ID_ALUNO        INTEGER PRIMARY KEY AUTOINCREMENT,
-            NOME            TEXT NOT NULL,
-            DATA_NASC       TEXT NOT NULL,
-            ALTURA_M        REAL
-        );
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS EXERCICIO (
-            ID_EXERCICIO    INTEGER PRIMARY KEY AUTOINCREMENT,
-            NOME            TEXT NOT NULL,
-            GRUPO           TEXT NOT NULL
-        );
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS PLANO (
-            ID_PLANO        INTEGER PRIMARY KEY AUTOINCREMENT,
-            NOME            TEXT NOT NULL
-        );
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS PLANO_EXERCICIO (
-            ID_PLANO        INTEGER NOT NULL,
-            ID_EXERCICIO    INTEGER NOT NULL,
-            ORDEM           INTEGER NOT NULL,
-            SERIES          INTEGER NOT NULL,
-            REPS            INTEGER NOT NULL,
-            PRIMARY KEY (ID_PLANO, ID_EXERCICIO),
-            FOREIGN KEY (ID_PLANO) REFERENCES PLANO(ID_PLANO) ON DELETE CASCADE,
-            FOREIGN KEY (ID_EXERCICIO) REFERENCES EXERCICIO(ID_EXERCICIO) ON DELETE RESTRICT
-        );
-    """)
-    # ---- Sessão (treino do dia)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS SESSAO (
-            ID_SESSAO       INTEGER PRIMARY KEY AUTOINCREMENT,
-            ID_ALUNO        INTEGER NOT NULL,
-            ID_PLANO        INTEGER NOT NULL,
-            DATA_SESSAO     TEXT NOT NULL,
-            FOREIGN KEY (ID_ALUNO) REFERENCES ALUNO(ID_ALUNO) ON DELETE CASCADE,
-            FOREIGN KEY (ID_PLANO) REFERENCES PLANO(ID_PLANO) ON DELETE CASCADE
-        );
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS SESSAO_ITEM (
-            ID_ITEM         INTEGER PRIMARY KEY AUTOINCREMENT,
-            ID_SESSAO       INTEGER NOT NULL,
-            ID_EXERCICIO    INTEGER NOT NULL,
-            FEITO           INTEGER NOT NULL DEFAULT 0,
-            SERIES_FEITAS   INTEGER,
-            REPS_MEDIA      INTEGER,
-            PESO_MEDIA      REAL,
-            OBS             TEXT,
-            FOREIGN KEY (ID_SESSAO) REFERENCES SESSAO(ID_SESSAO) ON DELETE CASCADE,
-            FOREIGN KEY (ID_EXERCICIO) REFERENCES EXERCICIO(ID_EXERCICIO) ON DELETE RESTRICT
-        );
-    """)
-
-    # Índices úteis
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_aluno_nome ON ALUNO (NOME);")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_exercicio_nome ON EXERCICIO (NOME);")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_plano_nome ON PLANO (NOME);")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_sessao_data ON SESSAO (DATA_SESSAO DESC);")
-
-    # Seed mínimo de exercícios se tabela estiver vazia
-    cur.execute("SELECT COUNT(*) FROM EXERCICIO;")
-    if cur.fetchone()[0] == 0:
-        base_ex = [
-            ("Supino reto", "Peito"),
-            ("Crucifixo (halteres)", "Peito"),
-            ("Remada curvada", "Costas"),
-            ("Puxada na frente", "Costas"),
-            ("Agachamento livre", "Pernas"),
-            ("Leg press", "Pernas"),
-            ("Desenvolvimento ombro", "Ombros"),
-            ("Elevação lateral", "Ombros"),
-            ("Rosca direta", "Bíceps"),
-            ("Tríceps corda", "Tríceps"),
-            ("Abdominal infra", "Core"),
-        ]
-        cur.executemany("INSERT INTO EXERCICIO (NOME, GRUPO) VALUES (?,?)", base_ex)
-
-    conn.commit()
-    conn.close()
 
 # =============== UTILITÁRIOS ===============
-
-def validar_data_brasil(data_str: str):
-    if not data_str:
-        return False, ""
-    try:
-        data_str = data_str.strip()
-        if len(data_str) != 10:
-            return False, ""
-        dt = datetime.strptime(data_str, "%d/%m/%Y")
-        if dt > datetime.now():
-            return False, ""
-        return True, dt.strftime("%Y-%m-%d")
-    except Exception:
-        return False, ""
-
-def sqlite_para_brasileiro(data_sqlite: str):
-    try:
-        dt = datetime.strptime(data_sqlite, "%Y-%m-%d")
-        return dt.strftime("%d/%m/%Y")
-    except Exception:
-        return data_sqlite
-
-def calcular_imc(peso, altura):
-    try:
-        if not peso or not altura or peso <= 0 or altura <= 0:
-            return "-", "Dados incompletos", ft.Colors.GREY_400
-        imc = peso / (altura * altura)
-        if imc <= 18.5:  return f"{imc:.2f}", "Magreza",   ft.Colors.BLUE_300
-        if imc <= 24.9:  return f"{imc:.2f}", "Saudável",  ft.Colors.GREEN_400
-        if imc <= 29.9:  return f"{imc:.2f}", "Sobrepeso", ft.Colors.ORANGE_400
-        if imc <= 34.9:  return f"{imc:.2f}", "Obesidade I", ft.Colors.RED_400
-        if imc <= 39.9:  return f"{imc:.2f}", "Obesidade II", ft.Colors.RED_600
-        return f"{imc:.2f}", "Obesidade III", ft.Colors.RED_800
-    except Exception:
-        return "-", "Erro", ft.Colors.GREY_400
+# Utilitários foram movidos para app.utils
 
 # =============== APLICATIVO ===============
 
 def main(page: ft.Page):
     init_db()
     page.title = "Checklist de Treino (Academia)"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.window_width = 980
-    page.window_height = 700
+    page.theme_mode = Theme.THEME_MODE
+    page.window_width = Theme.WINDOW_WIDTH
+    page.window_height = Theme.WINDOW_HEIGHT
 
     # ---------- Helper: fundo em gradiente ----------
     def with_bg(content, colors=None):
@@ -160,7 +27,7 @@ def main(page: ft.Page):
             gradient=ft.LinearGradient(
                 begin=ft.alignment.top_left,
                 end=ft.alignment.bottom_right,
-                colors=colors or ["#0b1220", "#111827", "#1f2937"]  # azul-acinzentado suave
+                colors=colors or Theme.BG_GRADIENT
             ),
             content=ft.Container(alignment=ft.alignment.center, content=content),
         )
@@ -236,10 +103,10 @@ def main(page: ft.Page):
                             controls=[
                                 ft.ElevatedButton("Alunos", icon=ft.Icons.PERSON, width=220,
                                                   on_click=lambda e: tela_alunos(),
-                                                  style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_600, color=ft.Colors.WHITE)),
+                                                  style=ft.ButtonStyle(bgcolor=Theme.SECONDARY, color=ft.Colors.WHITE)),
                                 ft.ElevatedButton("Exercícios", icon=ft.Icons.FITNESS_CENTER, width=220,
                                                   on_click=lambda e: tela_exercicios(),
-                                                  style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE)),
+                                                  style=ft.ButtonStyle(bgcolor=Theme.PRIMARY, color=ft.Colors.WHITE)),
                                 ft.ElevatedButton("Planos de Treino", icon=ft.Icons.VIEW_LIST, width=220,
                                                   on_click=lambda e: tela_planos(),
                                                   style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_600, color=ft.Colors.WHITE)),
