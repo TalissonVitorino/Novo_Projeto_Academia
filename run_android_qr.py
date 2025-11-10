@@ -62,11 +62,8 @@ def _print_qr_in_terminal(data: str) -> None:
 
 if __name__ == "__main__":
     # Configurações
-    host = os.getenv("FLET_HOST", "0.0.0.0")
-    try:
-        port = int(os.getenv("FLET_PORT", "8550"))
-    except ValueError:
-        port = 8550
+    host = "0.0.0.0"
+    port = 8550
 
     ip = _get_local_ip()
     url = f"http://{ip}:{port}"
@@ -81,16 +78,23 @@ if __name__ == "__main__":
     _print_qr_in_terminal(url)
 
     # Aguarda um pouco para você posicionar o celular antes de subir o servidor
-    time.sleep(0.3)
+    time.sleep(0.5)
+
+    print("\n[INFO] Iniciando servidor Flet...")
+    print(f"[INFO] Servidor rodando em: {url}")
+    print("[INFO] Pressione Ctrl+C para parar o servidor.\n")
 
     # Inicia o app Flet como Web Server acessível na LAN
-    # Observação: 'view=WEB_BROWSER' evita janela desktop; use seu navegador do PC ou do telefone.
-    # Força o modo Web Server (algumas versões do Flet exigem a variável de ambiente)
-    os.environ.setdefault("FLET_FORCE_WEB_SERVER", "1")
-    ft.app(
-        target=app_main,
-        view=ft.AppView.WEB_BROWSER,
-        host=host,
-        port=port,
-        # assets_dir pode ser configurado se você usar assets estáticos.
-    )
+    try:
+        ft.app(
+            target=app_main,
+            view=ft.AppView.WEB_BROWSER,
+            host=host,
+            port=port,
+            # Força HTML renderer para máxima compatibilidade com Android
+            web_renderer=ft.WebRenderer.HTML,
+        )
+    except KeyboardInterrupt:
+        print("\n[INFO] Servidor encerrado pelo usuário.")
+    except Exception as e:
+        print(f"\n[ERRO] Falha ao iniciar servidor: {e}")
