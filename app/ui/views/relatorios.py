@@ -8,7 +8,15 @@ def show_relatorios(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Relatório de Sessões", ft.Colors.BLUE_GREY_700, show_back=True, on_back=lambda e=None: on_back())
 
-    busca_aluno = ft.TextField(label="Filtrar por nome do aluno", prefix_icon=ft.Icons.SEARCH, width=480)
+    # Responsividade simples
+    is_small = (page.width or 0) <= 420
+
+    busca_aluno = ft.TextField(
+        label="Filtrar por nome do aluno",
+        prefix_icon=ft.Icons.SEARCH,
+        width=None,
+        expand=1,
+    )
     lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
     status = ft.Text("", color=ft.Colors.BLUE_200)
 
@@ -129,8 +137,15 @@ def show_relatorios(page: ft.Page, on_back):
             dialog.open = False
             page.update()
 
+        # Largura responsiva do diálogo para telas pequenas (Android)
+        try:
+            pw = int(page.width or 360)
+        except Exception:
+            pw = 360
+        dlg_w = max(300, min(720, pw - 32))
+
         dialog.content = ft.Container(
-            width=720,
+            width=dlg_w,
             padding=16,
             content=ft.Column(
                 spacing=12,

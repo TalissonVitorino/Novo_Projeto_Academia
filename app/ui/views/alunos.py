@@ -9,12 +9,15 @@ def show_alunos(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Alunos", ft.Colors.GREEN_700, show_back=True, on_back=lambda e=None: on_back())
 
-    nome = ft.TextField(label="Nome do Aluno", width=360)
-    data = ft.TextField(label="Nascimento (DD/MM/YYYY)", width=180, max_length=10)
-    altura = ft.TextField(label="Altura (m) – opcional", width=150, hint_text="ex.: 1.75")
-    peso = ft.TextField(label="Peso (kg) – opcional", width=150, hint_text="ex.: 75.5")
+    # Responsividade simples
+    is_small = (page.width or 0) <= 420
 
-    busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, width=540)
+    nome = ft.TextField(label="Nome do Aluno", expand=1)
+    data = ft.TextField(label="Nascimento (DD/MM/YYYY)", width=140 if is_small else 180, max_length=10)
+    altura = ft.TextField(label="Altura (m) – opcional", width=120 if is_small else 150, hint_text="ex.: 1.75")
+    peso = ft.TextField(label="Peso (kg) – opcional", width=120 if is_small else 150, hint_text="ex.: 75.5")
+
+    busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, expand=1)
     status = ft.Text("", color=ft.Colors.BLUE_200)
     lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
@@ -82,12 +85,14 @@ def show_alunos(page: ft.Page, on_back):
                     padding=12,
                     content=ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        wrap=True,
+                        run_spacing=6,
                         controls=[
-                            ft.Text(f"ID: {aid}", width=70, weight=ft.FontWeight.BOLD),
+                            ft.Text(f"ID: {aid}", width=60 if is_small else 70, weight=ft.FontWeight.BOLD),
                             ft.Text(anome, expand=True),
-                            ft.Text(f"Nasc: {data_br}", width=130),
-                            ft.Text(f"Alt: {'-' if alt is None else f'{alt}m'}", width=90),
-                            ft.Text(f"Peso: {'-' if pes is None else f'{pes}kg'}", width=100),
+                            ft.Text(f"Nasc: {data_br}", width=120 if is_small else 130),
+                            ft.Text(f"Alt: {'-' if alt is None else f'{alt}m'}", width=80 if is_small else 90),
+                            ft.Text(f"Peso: {'-' if pes is None else f'{pes}kg'}", width=90 if is_small else 100),
                             ft.Container(
                                 padding=ft.padding.symmetric(horizontal=8, vertical=4),
                                 border_radius=8,

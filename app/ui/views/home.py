@@ -26,9 +26,15 @@ def show_home(
     a, p, s = _contagem()
     set_appbar(page, "Checklist de Treino", ft.Colors.BLUE_GREY_800, show_back=False)
 
+    # Responsividade simples baseada na largura atual da página
+    is_small = (page.width or 0) <= 420
+    btn_w_small = 180
+    btn_w = 220
+    treino_btn_w = 260
+
     card = ft.Card(
         content=ft.Container(
-            padding=40,
+            padding=16 if is_small else 40,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=18,
@@ -52,17 +58,17 @@ def show_home(
                         alignment=ft.MainAxisAlignment.CENTER, spacing=14, run_spacing=10, wrap=True,
                         controls=[
                             ft.ElevatedButton(
-                                "Alunos", icon=ft.Icons.PERSON, width=220,
+                                "Alunos", icon=ft.Icons.PERSON, width=(btn_w_small if is_small else btn_w),
                                 on_click=lambda e: on_go_alunos(),
                                 style=ft.ButtonStyle(bgcolor=Theme.SECONDARY, color=ft.Colors.WHITE)
                             ),
                             ft.ElevatedButton(
-                                "Exercícios", icon=ft.Icons.FITNESS_CENTER, width=220,
+                                "Exercícios", icon=ft.Icons.FITNESS_CENTER, width=(btn_w_small if is_small else btn_w),
                                 on_click=lambda e: on_go_exercicios(),
                                 style=ft.ButtonStyle(bgcolor=Theme.PRIMARY, color=ft.Colors.WHITE)
                             ),
                             ft.ElevatedButton(
-                                "Planos de Treino", icon=ft.Icons.VIEW_LIST, width=220,
+                                "Planos de Treino", icon=ft.Icons.VIEW_LIST, width=(btn_w_small if is_small else btn_w),
                                 on_click=lambda e: on_go_planos(),
                                 style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_600, color=ft.Colors.WHITE)
                             ),
@@ -71,15 +77,20 @@ def show_home(
                     ft.Container(height=16),
                     ft.Text("TREINO", size=18, weight=ft.FontWeight.BOLD, color=Theme.TEXT_SECTION),
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.CENTER, spacing=14,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=14,
+                        run_spacing=10,
+                        wrap=True,
                         controls=[
                             ft.ElevatedButton(
-                                "Iniciar Treino (Checklist)", icon=ft.Icons.PLAY_ARROW, width=260,
+                                "Iniciar Treino (Checklist)", icon=ft.Icons.PLAY_ARROW,
+                                width=(btn_w if not is_small else btn_w_small),
                                 on_click=lambda e: on_go_treino(),
                                 style=ft.ButtonStyle(bgcolor=ft.Colors.ORANGE_600, color=ft.Colors.WHITE)
                             ),
                             ft.ElevatedButton(
-                                "Relatório de Sessões", icon=ft.Icons.ANALYTICS, width=220,
+                                "Relatório de Sessões", icon=ft.Icons.ANALYTICS,
+                                width=(btn_w if not is_small else btn_w_small),
                                 on_click=lambda e: on_go_relatorios(),
                                 style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_GREY_600, color=ft.Colors.WHITE)
                             ),

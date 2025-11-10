@@ -3,7 +3,7 @@ from app.config import Theme
 
 
 def with_bg(content: ft.Control, colors=None) -> ft.Container:
-    # Wrapper com gradiente e rolagem para evitar conteúdo oculto em janelas menores
+    # Wrapper com gradiente, SafeArea e rolagem para evitar conteúdo oculto em telas pequenas
     return ft.Container(
         expand=True,
         padding=20,
@@ -14,10 +14,12 @@ def with_bg(content: ft.Control, colors=None) -> ft.Container:
         ),
         content=ft.Container(
             alignment=ft.alignment.top_center,
-            content=ft.Column(
-                controls=[content],
-                scroll=ft.ScrollMode.AUTO,
-                spacing=0,
+            content=ft.SafeArea(
+                content=ft.Column(
+                    controls=[content],
+                    scroll=ft.ScrollMode.AUTO,
+                    spacing=0,
+                )
             ),
         ),
     )

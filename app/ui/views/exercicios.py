@@ -7,9 +7,12 @@ def show_exercicios(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Exercícios", ft.Colors.BLUE_700, show_back=True, on_back=lambda e=None: on_back())
 
-    nome = ft.TextField(label="Nome do exercício", width=360)
-    grupo = ft.TextField(label="Grupo muscular", width=220, hint_text="Peito, Costas, Pernas…")
-    busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, width=540)
+    # Responsividade simples
+    is_small = (page.width or 0) <= 420
+
+    nome = ft.TextField(label="Nome do exercício", expand=1)
+    grupo = ft.TextField(label="Grupo muscular", width=160 if is_small else 220, hint_text="Peito, Costas, Pernas…")
+    busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, expand=1)
     status = ft.Text("", color=ft.Colors.BLUE_200)
     lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
@@ -55,8 +58,10 @@ def show_exercicios(page: ft.Page, on_back):
                         padding=10,
                         content=ft.Row(
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            wrap=True,
+                            run_spacing=6,
                             controls=[
-                                ft.Text(f"{egrupo}", width=140, weight=ft.FontWeight.BOLD),
+                                ft.Text(f"{egrupo}", width=120 if is_small else 140, weight=ft.FontWeight.BOLD),
                                 ft.Text(enome, expand=True),
                                 make_delete_button(eid, enome),
                             ],

@@ -9,10 +9,13 @@ def show_treino(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Iniciar Treino – Checklist", ft.Colors.ORANGE_700, show_back=True, on_back=lambda e=None: on_back())
 
-    busca_aluno = ft.TextField(label="Buscar aluno", width=300, prefix_icon=ft.Icons.SEARCH)
-    dd_aluno = ft.Dropdown(label="Aluno", width=300)
-    dd_plano = ft.Dropdown(label="Plano", width=240)
-    data_tf = ft.TextField(label="Data (DD/MM/YYYY)", width=140, value=datetime.now().strftime("%d/%m/%Y"), max_length=10)
+    # Responsividade simples
+    is_small = (page.width or 0) <= 420
+
+    busca_aluno = ft.TextField(label="Buscar aluno", prefix_icon=ft.Icons.SEARCH, expand=1)
+    dd_aluno = ft.Dropdown(label="Aluno", width=200 if is_small else 300)
+    dd_plano = ft.Dropdown(label="Plano", width=180 if is_small else 240)
+    data_tf = ft.TextField(label="Data (DD/MM/YYYY)", width=120 if is_small else 140, value=datetime.now().strftime("%d/%m/%Y"), max_length=10)
 
     lista_check = ft.Column(scroll=ft.ScrollMode.AUTO, height=320)
     status = ft.Text("", color=ft.Colors.ORANGE_200)
@@ -73,17 +76,20 @@ def show_treino(page: ft.Page, on_back):
         status.value = f"Exercícios: {len(rows)}"
         for ordem, eid, enome, egrupo, series, reps in rows:
             chk = ft.Checkbox(label=f"{ordem:02d} • {egrupo} – {enome} ({series}x{reps})")
-            reps_tf = ft.TextField(label="Reps (média)", width=120)
-            peso_tf = ft.TextField(label="Peso (médio)", width=120)
-            series_tf = ft.TextField(label="Séries feitas", width=120)
-            obs_tf = ft.TextField(label="Observações", width=240)
+            reps_tf = ft.TextField(label="Reps (média)", width=100 if is_small else 120)
+            peso_tf = ft.TextField(label="Peso (médio)", width=100 if is_small else 120)
+            series_tf = ft.TextField(label="Séries feitas", width=100 if is_small else 120)
+            obs_tf = ft.TextField(label="Observações", expand=1)
             linha = ft.Card(
                 elevation=1,
                 content=ft.Container(
                     padding=8,
                     content=ft.Column(
                         spacing=8,
-                        controls=[chk, ft.Row([series_tf, reps_tf, peso_tf, obs_tf], spacing=8)],
+                        controls=[
+                            chk,
+                            ft.Row([series_tf, reps_tf, peso_tf, obs_tf], spacing=8, wrap=True, run_spacing=8),
+                        ],
                     ),
                 ),
             )

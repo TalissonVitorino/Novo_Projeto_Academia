@@ -7,8 +7,11 @@ def show_planos(page: ft.Page, on_back):
     page.clean()
     set_appbar(page, "Planos de Treino", ft.Colors.PURPLE_700, show_back=True, on_back=lambda e=None: on_back())
 
-    nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", width=260)
-    busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, width=360)
+    # Responsividade simples
+    is_small = (page.width or 0) <= 420
+
+    nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", expand=1)
+    busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, expand=1)
     status = ft.Text("", color=ft.Colors.BLUE_200)
     lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
@@ -69,8 +72,10 @@ def show_planos(page: ft.Page, on_back):
                         padding=10,
                         content=ft.Row(
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            wrap=True,
+                            run_spacing=6,
                             controls=[
-                                ft.Text(f"ID: {pid}", width=80, weight=ft.FontWeight.BOLD),
+                                ft.Text(f"ID: {pid}", width=70 if is_small else 80, weight=ft.FontWeight.BOLD),
                                 ft.Text(pnome, expand=True),
                                 make_menu(pid, pnome),
                             ],
@@ -122,7 +127,7 @@ def show_planos(page: ft.Page, on_back):
 
     def editar_plano_exercicios(_id_plano: int, _nome: str):
         # Dialog to add/remove exercises for the plan
-        dlg_content = ft.Column(spacing=10, width=640, scroll=ft.ScrollMode.AUTO)
+        dlg_content = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO)
         titulo = ft.Text(f"Plano: {_nome}", size=18, weight=ft.FontWeight.BOLD)
         lista_exercicios = ft.Dropdown(label="Exercício")
         series = ft.TextField(label="Séries", width=90, value="3")
@@ -218,7 +223,21 @@ def show_planos(page: ft.Page, on_back):
             ft.Container(height=8),
             ft.Row([ft.ElevatedButton("Fechar", on_click=lambda e: close_dialog())], alignment=ft.MainAxisAlignment.END),
         ]
-        dialog = ft.AlertDialog(content=dlg_content, modal=True)
+        # Largura responsiva do diálogo (ajusta à tela do Android)
+        try:
+            pw = int(page.width or 360)
+        except Exception:
+            pw = 360
+        dlg_w = max(300, min(720, pw - 32))
+
+        dialog = ft.AlertDialog(
+            content=ft.Container(
+                width=dlg_w,
+                padding=16,
+                content=dlg_content,
+            ),
+            modal=True,
+        )
         page.dialog = dialog
         dialog.open = True
         page.update()
