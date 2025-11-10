@@ -25,7 +25,35 @@ def with_bg(content: ft.Control, colors=None) -> ft.Container:
     )
 
 
-def set_appbar(page: ft.Page, title: str, bgcolor=None, show_back: bool = False, on_back=None):
+def _make_theme_toggle(page: ft.Page) -> ft.IconButton:
+    # Define o ícone conforme o tema atual
+    is_dark = page.theme_mode == ft.ThemeMode.DARK
+    icon = ft.Icons.LIGHT_MODE if is_dark else ft.Icons.DARK_MODE
+    tooltip = "Tema claro/escuro"
+
+    def toggle(_):
+        try:
+            current = page.theme_mode
+            new_mode = ft.ThemeMode.LIGHT if current == ft.ThemeMode.DARK else ft.ThemeMode.DARK
+            page.theme_mode = new_mode
+            # Persiste no storage (Web/Android via navegador)
+            try:
+                page.client_storage.set("theme_mode", "dark" if new_mode == ft.ThemeMode.DARK else "light")
+            except Exception:
+                pass
+            # Atualiza o próprio ícone
+            btn.icon = ft.Icons.LIGHT_MODE if new_mode == ft.ThemeMode.DARK else ft.Icons.DARK_MODE
+            page.update()
+        except Exception:
+            pass
+
+    btn = ft.IconButton(icon=icon, tooltip=tooltip, on_click=toggle)
+    return btn
+
+
+from typing import Optional, List
+
+def set_appbar(page: ft.Page, title: str, bgcolor=None, show_back: bool = False, on_back=None, actions: Optional[List[ft.Control]] = None):
     # Armazena handler no objeto page para permitir tecla ESC voltar
     if show_back and on_back:
         page._back_handler = on_back
@@ -43,11 +71,19 @@ def set_appbar(page: ft.Page, title: str, bgcolor=None, show_back: bool = False,
         page._back_handler = None
         leading = None
 
+    # Componhe ações incluindo toggle de tema
+    actions = list(actions) if actions else []
+    try:
+        actions.append(_make_theme_toggle(page))
+    except Exception:
+        pass
+
     page.appbar = ft.AppBar(
         leading=leading,
         title=ft.Text(title),
         center_title=True,
         bgcolor=bgcolor,
+        actions=actions,
     )
 
     def _on_kb(ev: ft.KeyboardEvent):
