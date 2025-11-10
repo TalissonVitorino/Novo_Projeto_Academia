@@ -15,7 +15,23 @@ from app.utils import validar_data_brasil, sqlite_para_brasileiro, calcular_imc
 def main(page: ft.Page):
     init_db()
     page.title = "Checklist de Treino (Academia)"
-    page.theme_mode = Theme.THEME_MODE
+
+    # Apply Gym themes (light/dark palettes)
+    page.theme = Theme.light_theme()
+    page.dark_theme = Theme.dark_theme()
+
+    # Try to restore saved theme from client storage or use default
+    try:
+        saved = page.client_storage.get("theme_mode")
+    except Exception:
+        saved = None
+    if saved == "light":
+        page.theme_mode = ft.ThemeMode.LIGHT
+    elif saved == "dark":
+        page.theme_mode = ft.ThemeMode.DARK
+    else:
+        page.theme_mode = Theme.THEME_MODE
+
     page.window_width = Theme.WINDOW_WIDTH
     page.window_height = Theme.WINDOW_HEIGHT
 
@@ -35,6 +51,28 @@ def main(page: ft.Page):
     conn = get_conn()
     cur = conn.cursor()
 
+    # ---------- Helper: Botão de troca de tema ----------
+    def make_theme_toggle():
+        is_dark = page.theme_mode == ft.ThemeMode.DARK
+        icon = ft.Icons.LIGHT_MODE if is_dark else ft.Icons.DARK_MODE
+
+        def toggle(_):
+            try:
+                current = page.theme_mode
+                new_mode = ft.ThemeMode.LIGHT if current == ft.ThemeMode.DARK else ft.ThemeMode.DARK
+                page.theme_mode = new_mode
+                try:
+                    page.client_storage.set("theme_mode", "dark" if new_mode == ft.ThemeMode.DARK else "light")
+                except Exception:
+                    pass
+                btn.icon = ft.Icons.LIGHT_MODE if new_mode == ft.ThemeMode.DARK else ft.Icons.DARK_MODE
+                page.update()
+            except Exception:
+                pass
+
+        btn = ft.IconButton(icon=icon, tooltip="Alternar tema claro/escuro", on_click=toggle)
+        return btn
+
     # ---------- Helper: AppBar com botão Voltar persistente ----------
     current_back_handler = None
 
@@ -50,11 +88,20 @@ def main(page: ft.Page):
         else:
             current_back_handler = None
             leading = None
+
+        # Adiciona botão de tema nas ações
+        actions = []
+        try:
+            actions.append(make_theme_toggle())
+        except Exception:
+            pass
+
         page.appbar = ft.AppBar(
             leading=leading,
             title=ft.Text(title),
             center_title=True,
             bgcolor=bgcolor,
+            actions=actions,
         )
         # Acessibilidade: tecla Esc volta quando disponível
         def _on_kb(ev: ft.KeyboardEvent):

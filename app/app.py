@@ -31,8 +31,15 @@ def main(page: ft.Page):
     else:
         page.theme_mode = Theme.THEME_MODE
 
-    page.window_width = Theme.WINDOW_WIDTH
-    page.window_height = Theme.WINDOW_HEIGHT
+    # Window size only for desktop (not for web/mobile)
+    try:
+        if page.web:
+            pass  # Skip window size for web
+        else:
+            page.window_width = Theme.WINDOW_WIDTH
+            page.window_height = Theme.WINDOW_HEIGHT
+    except Exception:
+        pass
 
     # Keep track of current renderer to re-render on resize
     current_render = {"fn": None}
