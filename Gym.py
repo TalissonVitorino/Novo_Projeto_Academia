@@ -35,18 +35,32 @@ def main(page: ft.Page):
     page.window_width = Theme.WINDOW_WIDTH
     page.window_height = Theme.WINDOW_HEIGHT
 
-    # ---------- Helper: fundo em gradiente ----------
+    # ---------- Helpers de UI (gradiente e cores por tema) ----------
+    def _is_dark() -> bool:
+        try:
+            return page.theme_mode == ft.ThemeMode.DARK
+        except Exception:
+            return True
+
     def with_bg(content, colors=None):
+        # Fundo com gradiente adaptativo ao tema (claro/escuro)
+        gradient_colors = (
+            Theme.BG_GRADIENT_DARK if _is_dark() else Theme.BG_GRADIENT_LIGHT
+        )
         return ft.Container(
             expand=True,
             padding=20,
             gradient=ft.LinearGradient(
                 begin=ft.alignment.top_left,
                 end=ft.alignment.bottom_right,
-                colors=colors or Theme.BG_GRADIENT
+                colors=colors or gradient_colors,
             ),
             content=ft.Container(alignment=ft.alignment.center, content=content),
         )
+
+    def tone(color_light, color_dark):
+        # Escolhe uma tonalidade mais forte no tema claro e uma mais suave no escuro
+        return color_dark if _is_dark() else color_light
 
     conn = get_conn()
     cur = conn.cursor()
@@ -78,10 +92,17 @@ def main(page: ft.Page):
 
     def set_appbar(title: str, bgcolor=None, show_back: bool = False, on_back=None):
         nonlocal current_back_handler
+        # Cores adaptativas conforme tema
+        try:
+            is_dark = page.theme_mode == ft.ThemeMode.DARK
+        except Exception:
+            is_dark = True
+
         if show_back:
             current_back_handler = on_back or go_home
             leading = ft.IconButton(
                 icon=ft.Icons.ARROW_BACK,
+                icon_color=(ft.Colors.AMBER_300 if is_dark else ft.Colors.BLUE_GREY_800),
                 tooltip="Voltar",
                 on_click=lambda e: current_back_handler(e),
             )
@@ -96,9 +117,13 @@ def main(page: ft.Page):
         except Exception:
             pass
 
+        # Cor de fundo padrão adaptativa se não fornecida
+        if bgcolor is None:
+            bgcolor = "#0f0f10" if is_dark else ft.Colors.WHITE
+
         page.appbar = ft.AppBar(
             leading=leading,
-            title=ft.Text(title),
+            title=ft.Text(title, color=(ft.Colors.WHITE if is_dark else ft.Colors.BLACK)),
             center_title=True,
             bgcolor=bgcolor,
             actions=actions,
@@ -189,7 +214,7 @@ def main(page: ft.Page):
         altura = ft.TextField(label="Altura (m) – opcional", width=150, hint_text="ex.: 1.75")
 
         busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, width=540)
-        status = ft.Text("", color=ft.Colors.BLUE_200)
+        status = ft.Text("", color=tone(ft.Colors.BLUE_700, ft.Colors.BLUE_200))
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
         def validar_data(_):
@@ -290,7 +315,7 @@ def main(page: ft.Page):
         nome = ft.TextField(label="Nome do exercício", width=360)
         grupo = ft.TextField(label="Grupo muscular", width=220, hint_text="Peito, Costas, Pernas…")
         busca = ft.TextField(label="Buscar", prefix_icon=ft.Icons.SEARCH, width=540)
-        status = ft.Text("", color=ft.Colors.BLUE_200)
+        status = ft.Text("", color=tone(ft.Colors.BLUE_700, ft.Colors.BLUE_200))
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
         def salvar(_):
@@ -369,7 +394,7 @@ def main(page: ft.Page):
 
         nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", width=260)
         busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, width=360)
-        status = ft.Text("", color=ft.Colors.BLUE_200)
+        status = ft.Text("", color=tone(ft.Colors.BLUE_700, ft.Colors.BLUE_200))
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
         def salvar(_):
@@ -556,7 +581,7 @@ def main(page: ft.Page):
         data_tf = ft.TextField(label="Data (DD/MM/YYYY)", width=180, value=datetime.now().strftime("%d/%m/%Y"), max_length=10)
 
         lista_check = ft.Column(scroll=ft.ScrollMode.AUTO, height=320)
-        status = ft.Text("", color=ft.Colors.ORANGE_200)
+        status = ft.Text("", color=tone(ft.Colors.ORANGE_700, ft.Colors.ORANGE_200))
 
         def load_alunos(f=""):
             """Carrega alunos e seleciona automaticamente o 1º resultado encontrado."""
@@ -708,7 +733,7 @@ def main(page: ft.Page):
 
         busca_aluno = ft.TextField(label="Filtrar por nome do aluno", prefix_icon=ft.Icons.SEARCH, width=480)
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
-        status = ft.Text("", color=ft.Colors.BLUE_200)
+        status = ft.Text("", color=tone(ft.Colors.BLUE_700, ft.Colors.BLUE_200))
 
         def carregar(f=""):
             lista.controls.clear()

@@ -7,7 +7,8 @@ from app.utils import validar_data_brasil
 
 def show_treino(page: ft.Page, on_back):
     page.clean()
-    set_appbar(page, "Iniciar Treino – Checklist", ft.Colors.ORANGE_700, show_back=True, on_back=lambda e=None: on_back())
+    # AppBar adaptativa ao tema (bgcolor automático)
+    set_appbar(page, "Iniciar Treino – Checklist", None, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
     is_small = (page.width or 0) <= 420
@@ -153,6 +154,7 @@ def show_treino(page: ft.Page, on_back):
 
     page.add(
         with_bg(
+            page,
             ft.Column(
                 spacing=12,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -161,7 +163,13 @@ def show_treino(page: ft.Page, on_back):
                     ft.Divider(),
                     ft.Row([busca_aluno, dd_aluno, dd_plano, data_tf], alignment=ft.MainAxisAlignment.CENTER, spacing=10, wrap=True, run_spacing=10),
                     status,
-                    ft.Container(content=lista_check, height=360, border=ft.border.all(1, ft.Colors.ORANGE_200), border_radius=10, padding=6),
+                    ft.Container(
+                        content=ft.Scrollbar(content=lista_check, thumb_visibility=True, interactive=True),
+                        height=360,
+                        border=ft.border.all(1, ft.Colors.ORANGE_200),
+                        border_radius=10,
+                        padding=6,
+                    ),
                     ft.Row(
                         alignment=ft.MainAxisAlignment.CENTER,
                         spacing=12,

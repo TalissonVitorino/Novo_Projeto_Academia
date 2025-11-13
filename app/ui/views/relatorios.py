@@ -6,7 +6,8 @@ from app.utils import sqlite_para_brasileiro
 
 def show_relatorios(page: ft.Page, on_back):
     page.clean()
-    set_appbar(page, "Relatório de Sessões", ft.Colors.BLUE_GREY_700, show_back=True, on_back=lambda e=None: on_back())
+    # AppBar adaptativa ao tema (bgcolor automático)
+    set_appbar(page, "Relatório de Sessões", None, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
     is_small = (page.width or 0) <= 420
@@ -194,6 +195,7 @@ def show_relatorios(page: ft.Page, on_back):
 
     page.add(
         with_bg(
+            page,
             ft.Column(
                 spacing=12,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -202,7 +204,13 @@ def show_relatorios(page: ft.Page, on_back):
                     ft.Divider(),
                     ft.Row([busca_aluno], alignment=ft.MainAxisAlignment.CENTER),
                     status,
-                    ft.Container(content=lista, height=420, border=ft.border.all(1, ft.Colors.BLUE_GREY_200), border_radius=10, padding=6),
+                    ft.Container(
+                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
+                        height=420,
+                        border=ft.border.all(1, ft.Colors.BLUE_GREY_200),
+                        border_radius=10,
+                        padding=6,
+                    ),
                 ],
             )
         )

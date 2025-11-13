@@ -24,7 +24,8 @@ def show_home(
 ):
     page.clean()
     a, p, s = _contagem()
-    set_appbar(page, "Checklist de Treino", ft.Colors.BLUE_GREY_800, show_back=False)
+    # AppBar adaptativa ao tema (bgcolor automático)
+    set_appbar(page, "Checklist de Treino", None, show_back=False)
 
     # Responsividade simples baseada na largura atual da página
     is_small = (page.width or 0) <= 420
@@ -60,7 +61,7 @@ def show_home(
                             ft.ElevatedButton(
                                 "Alunos", icon=ft.Icons.PERSON, width=(btn_w_small if is_small else btn_w),
                                 on_click=lambda e: on_go_alunos(),
-                                style=ft.ButtonStyle(bgcolor=Theme.SECONDARY, color=ft.Colors.WHITE)
+                                style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE)
                             ),
                             ft.ElevatedButton(
                                 "Exercícios", icon=ft.Icons.FITNESS_CENTER, width=(btn_w_small if is_small else btn_w),
@@ -92,7 +93,7 @@ def show_home(
                                 "Relatório de Sessões", icon=ft.Icons.ANALYTICS,
                                 width=(btn_w if not is_small else btn_w_small),
                                 on_click=lambda e: on_go_relatorios(),
-                                style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_GREY_600, color=ft.Colors.WHITE)
+                                style=ft.ButtonStyle(bgcolor=ft.Colors.GREY_400, color=ft.Colors.BLACK)
                             ),
                         ],
                     ),
@@ -102,4 +103,4 @@ def show_home(
         elevation=8,
     )
 
-    page.add(with_bg(ft.Container(content=card, alignment=ft.alignment.center, padding=20)))
+    page.add(with_bg(page, ft.Container(content=card, alignment=ft.alignment.center, padding=20)))

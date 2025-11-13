@@ -141,6 +141,7 @@ def show_alunos(page: ft.Page, on_back):
 
     page.add(
         with_bg(
+            page,
             ft.Column(
                 spacing=12,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -150,7 +151,13 @@ def show_alunos(page: ft.Page, on_back):
                     ft.Row([nome, data, altura, peso, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True),
                     ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                     status,
-                    ft.Container(content=lista, height=360, border=ft.border.all(1, ft.Colors.BLUE_200), border_radius=10, padding=6),
+                    ft.Container(
+                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
+                        height=360,
+                        border=ft.border.all(1, ft.Colors.BLUE_200),
+                        border_radius=10,
+                        padding=6,
+                    ),
                 ],
             )
         )
