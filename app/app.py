@@ -19,17 +19,7 @@ def main(page: ft.Page):
     page.theme = Theme.light_theme()
     page.dark_theme = Theme.dark_theme()
 
-    # Try to restore saved theme from client storage (web/mobile) or keep default
-    try:
-        saved = page.client_storage.get("theme_mode")
-    except Exception:
-        saved = None
-    if saved == "light":
-        page.theme_mode = ft.ThemeMode.LIGHT
-    elif saved == "dark":
-        page.theme_mode = ft.ThemeMode.DARK
-    else:
-        page.theme_mode = Theme.THEME_MODE
+    page.theme_mode = Theme.THEME_MODE
 
     # Window size only for desktop (not for web/mobile)
     try:
@@ -48,10 +38,64 @@ def main(page: ft.Page):
         current_render["fn"] = fn
         fn()
 
+    # Debounce e threshold para evitar loop de re-render no navegador mobile
+    resize_state = {
+        "last_w": None,
+        "last_h": None,
+        "last_ts": 0.0,
+    }
+
+    def _get_size():
+        # Em web, page.width/height refletem o viewport. Em desktop, usar window_*.
+        w = getattr(page, "width", None)
+        h = getattr(page, "height", None)
+        if w is None or h is None:
+            # fallback desktop
+            w = getattr(page, "window_width", None)
+            h = getattr(page, "window_height", None)
+        return w, h
+
     def on_resize(e):
         fn = current_render.get("fn")
-        if callable(fn):
-            fn()
+        if not callable(fn):
+            return
+
+        # Parâmetros diferentes para web vs desktop
+        is_web = False
+        try:
+            is_web = bool(page.web)
+        except Exception:
+            is_web = False
+
+        # Thresholds de variação mínima e intervalo mínimo entre re-renderizações
+        min_interval = 0.35 if is_web else 0.10
+        min_delta = 24 if is_web else 8
+
+        # Medir tamanho atual e comparar com último
+        try:
+            import time as _time
+            now = _time.monotonic()
+        except Exception:
+            now = 0.0
+
+        w, h = _get_size()
+        lw, lh = resize_state["last_w"], resize_state["last_h"]
+
+        # Se ainda não temos referência, apenas armazenar e evitar re-render imediato
+        if lw is None or lh is None:
+            resize_state["last_w"], resize_state["last_h"], resize_state["last_ts"] = w, h, now
+            return
+
+        dw = 0 if (w is None or lw is None) else abs(w - lw)
+        dh = 0 if (h is None or lh is None) else abs(h - lh)
+
+        # Evitar re-render por pequenas oscilações (ex.: barra de endereço do mobile)
+        if dw < min_delta and dh < min_delta and (now - resize_state["last_ts"]) < min_interval:
+            return
+
+        # Atualiza referência e re-renderiza a view atual
+        resize_state["last_w"], resize_state["last_h"], resize_state["last_ts"] = w, h, now
+        fn()
 
     page.on_resized = on_resize
 
