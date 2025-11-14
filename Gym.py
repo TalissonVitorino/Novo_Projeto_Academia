@@ -36,6 +36,14 @@ def main(page: ft.Page):
     page.window_height = Theme.WINDOW_HEIGHT
 
     # ---------- Helpers de UI (gradiente e cores por tema) ----------
+    # Guardamos referências para atualizar imediatamente quando o tema muda
+    current_bg_container: ft.Container | None = None
+    last_appbar_state = {
+        "title": page.title,
+        "bgcolor": None,
+        "show_back": False,
+        "on_back": None,
+    }
     def _is_dark() -> bool:
         try:
             return page.theme_mode == ft.ThemeMode.DARK
@@ -47,7 +55,7 @@ def main(page: ft.Page):
         gradient_colors = (
             Theme.BG_GRADIENT_DARK if _is_dark() else Theme.BG_GRADIENT_LIGHT
         )
-        return ft.Container(
+        container = ft.Container(
             expand=True,
             padding=20,
             gradient=ft.LinearGradient(
@@ -57,6 +65,10 @@ def main(page: ft.Page):
             ),
             content=ft.Container(alignment=ft.alignment.center, content=content),
         )
+        # Salva referência do container atual para atualização de gradiente no toggle de tema
+        nonlocal current_bg_container
+        current_bg_container = container
+        return container
 
     def tone(color_light, color_dark):
         # Escolhe uma tonalidade mais forte no tema claro e uma mais suave no escuro
@@ -65,10 +77,41 @@ def main(page: ft.Page):
     conn = get_conn()
     cur = conn.cursor()
 
+    # ---------- Helper: Atualização global ao alternar tema ----------
+    def refresh_theme():
+        # Atualiza gradiente do fundo atual
+        try:
+            if current_bg_container is not None:
+                new_colors = Theme.BG_GRADIENT_DARK if _is_dark() else Theme.BG_GRADIENT_LIGHT
+                current_bg_container.gradient = ft.LinearGradient(
+                    begin=ft.alignment.top_left,
+                    end=ft.alignment.bottom_right,
+                    colors=new_colors,
+                )
+        except Exception:
+            pass
+
+        # Reconstrói AppBar com último estado salvo para atualizar cores imediatamente
+        try:
+            set_appbar(
+                last_appbar_state["title"],
+                last_appbar_state["bgcolor"],
+                last_appbar_state["show_back"],
+                last_appbar_state["on_back"],
+            )
+        except Exception:
+            pass
+
+        try:
+            page.update()
+        except Exception:
+            pass
+
     # ---------- Helper: Botão de troca de tema ----------
     def make_theme_toggle():
         is_dark = page.theme_mode == ft.ThemeMode.DARK
         icon = ft.Icons.LIGHT_MODE if is_dark else ft.Icons.DARK_MODE
+        icon_color = ft.Colors.AMBER_300 if is_dark else ft.Colors.BLUE_GREY_800
 
         def toggle(_):
             try:
@@ -79,12 +122,20 @@ def main(page: ft.Page):
                     page.client_storage.set("theme_mode", "dark" if new_mode == ft.ThemeMode.DARK else "light")
                 except Exception:
                     pass
+                # Atualiza ícone e cor para manter contraste
                 btn.icon = ft.Icons.LIGHT_MODE if new_mode == ft.ThemeMode.DARK else ft.Icons.DARK_MODE
-                page.update()
+                btn.icon_color = ft.Colors.AMBER_300 if new_mode == ft.ThemeMode.DARK else ft.Colors.BLUE_GREY_800
+                # Atualiza UI dependente do tema imediatamente
+                refresh_theme()
             except Exception:
                 pass
 
-        btn = ft.IconButton(icon=icon, tooltip="Alternar tema claro/escuro", on_click=toggle)
+        btn = ft.IconButton(
+            icon=icon,
+            icon_color=icon_color,
+            tooltip="Alternar tema claro/escuro",
+            on_click=toggle,
+        )
         return btn
 
     # ---------- Helper: AppBar com botão Voltar persistente ----------
@@ -92,6 +143,11 @@ def main(page: ft.Page):
 
     def set_appbar(title: str, bgcolor=None, show_back: bool = False, on_back=None):
         nonlocal current_back_handler
+        # Salva último estado para reconstrução após troca de tema
+        last_appbar_state["title"] = title
+        last_appbar_state["bgcolor"] = bgcolor
+        last_appbar_state["show_back"] = show_back
+        last_appbar_state["on_back"] = on_back
         # Cores adaptativas conforme tema
         try:
             is_dark = page.theme_mode == ft.ThemeMode.DARK
