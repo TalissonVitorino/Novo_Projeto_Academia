@@ -204,7 +204,7 @@ def main(page: ft.Page):
     def go_home(_=None):
         page.clean()
         a, p, s = contagem()
-        set_appbar("Checklist de Treino", ft.Colors.BLUE_GREY_800, show_back=False)
+        set_appbar("Checklist de Treino", None, show_back=False)
 
         card = ft.Card(
             content=ft.Container(
@@ -263,7 +263,7 @@ def main(page: ft.Page):
     # ---------------- Alunos ----------------
     def tela_alunos():
         page.clean()
-        set_appbar("Alunos", ft.Colors.GREEN_700, show_back=True, on_back=go_home)
+        set_appbar("Alunos", None, show_back=True, on_back=go_home)
 
         nome = ft.TextField(label="Nome do Aluno", width=360)
         data = ft.TextField(label="Nascimento (DD/MM/YYYY)", width=180, max_length=10)
@@ -366,7 +366,7 @@ def main(page: ft.Page):
     # ---------------- Exercícios ----------------
     def tela_exercicios():
         page.clean()
-        set_appbar("Exercícios", ft.Colors.BLUE_700, show_back=True, on_back=go_home)
+        set_appbar("Exercícios", None, show_back=True, on_back=go_home)
 
         nome = ft.TextField(label="Nome do exercício", width=360)
         grupo = ft.TextField(label="Grupo muscular", width=220, hint_text="Peito, Costas, Pernas…")
@@ -446,7 +446,7 @@ def main(page: ft.Page):
     # ---------------- Planos ----------------
     def tela_planos():
         page.clean()
-        set_appbar("Planos de Treino", ft.Colors.PURPLE_700, show_back=True, on_back=go_home)
+        set_appbar("Planos de Treino", None, show_back=True, on_back=go_home)
 
         nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", width=260)
         busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, width=360)
@@ -629,7 +629,7 @@ def main(page: ft.Page):
     # ---------------- Iniciar Treino (Checklist) ----------------
     def tela_iniciar_treino():
         page.clean()
-        set_appbar("Iniciar Treino – Checklist", ft.Colors.ORANGE_700, show_back=True, on_back=go_home)
+        set_appbar("Iniciar Treino – Checklist", None, show_back=True, on_back=go_home)
 
         busca_aluno = ft.TextField(label="Buscar aluno", width=360, prefix_icon=ft.Icons.SEARCH)
         dd_aluno = ft.Dropdown(label="Aluno", width=360)
@@ -785,7 +785,7 @@ def main(page: ft.Page):
     # ---------------- Relatório de Sessões ----------------
     def tela_relatorio_sessoes():
         page.clean()
-        set_appbar("Relatório de Sessões", ft.Colors.BLUE_GREY_700, show_back=True, on_back=go_home)
+        set_appbar("Relatório de Sessões", None, show_back=True, on_back=go_home)
 
         busca_aluno = ft.TextField(label="Filtrar por nome do aluno", prefix_icon=ft.Icons.SEARCH, width=480)
         lista = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
