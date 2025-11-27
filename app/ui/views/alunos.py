@@ -10,7 +10,8 @@ def show_alunos(page: ft.Page, on_back):
     set_appbar(page, "Alunos", ft.Colors.GREEN_700, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
-    is_small = (page.width or 0) <= 420
+    pw = int(page.width or 0)
+    is_small = pw <= 420
 
     nome = ft.TextField(label="Nome do Aluno", expand=1)
     data = ft.TextField(label="Nascimento (DD/MM/YYYY)", width=140 if is_small else 180, max_length=10)
@@ -139,6 +140,22 @@ def show_alunos(page: ft.Page, on_back):
     busca.on_change = lambda e: carregar(busca.value)
     busca.on_submit = lambda e: carregar(busca.value)
 
+    # Altura da lista proporcional à tela para caber bem no Android
+    ph = int(page.height or 640)
+    list_h = max(240, min(520, ph - 300))
+
+    # Layout do formulário mais amigável para telas pequenas
+    if is_small:
+        form_controls: list[ft.Control] = [
+            nome,
+            ft.Row([data, altura, peso], spacing=8, run_spacing=8, wrap=True, alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row([ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER),
+        ]
+    else:
+        form_controls = [
+            ft.Row([nome, data, altura, peso, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True)
+        ]
+
     page.add(
         with_bg(
             page,
@@ -148,12 +165,12 @@ def show_alunos(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Cadastro de Alunos", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([nome, data, altura, peso, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True),
+                    *form_controls,
                     ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                     status,
                     ft.Container(
-                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
-                        height=360,
+                        content=lista,
+                        height=list_h,
                         border=ft.border.all(1, ft.Colors.BLUE_200),
                         border_radius=10,
                         padding=6,

@@ -11,7 +11,8 @@ def show_treino(page: ft.Page, on_back):
     set_appbar(page, "Iniciar Treino – Checklist", None, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
-    is_small = (page.width or 0) <= 420
+    pw = int(page.width or 0)
+    is_small = pw <= 420
 
     busca_aluno = ft.TextField(label="Buscar aluno", prefix_icon=ft.Icons.SEARCH, expand=1)
     dd_aluno = ft.Dropdown(label="Aluno", width=200 if is_small else 300)
@@ -152,6 +153,21 @@ def show_treino(page: ft.Page, on_back):
     busca_aluno.on_submit = lambda e: load_alunos(busca_aluno.value)
     dd_plano.on_change = lambda e: load_checklist()
 
+    # Altura da lista proporcional
+    ph = int(page.height or 640)
+    list_h = max(240, min(520, ph - 320))
+
+    if is_small:
+        header_controls: list[ft.Control] = [
+            busca_aluno,
+            ft.Row([dd_aluno, dd_plano], spacing=8, run_spacing=8, wrap=True, alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row([data_tf], alignment=ft.MainAxisAlignment.CENTER),
+        ]
+    else:
+        header_controls = [
+            ft.Row([busca_aluno, dd_aluno, dd_plano, data_tf], alignment=ft.MainAxisAlignment.CENTER, spacing=10, wrap=True, run_spacing=10)
+        ]
+
     page.add(
         with_bg(
             page,
@@ -161,11 +177,12 @@ def show_treino(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Iniciar Treino (Checklist)", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([busca_aluno, dd_aluno, dd_plano, data_tf], alignment=ft.MainAxisAlignment.CENTER, spacing=10, wrap=True, run_spacing=10),
+                    *header_controls,
                     status,
                     ft.Container(
-                        content=ft.Scrollbar(content=lista_check, thumb_visibility=True, interactive=True),
-                        height=360,
+                        # Removido ft.Scrollbar: componente inexistente no Flet atual; Column já tem scroll=AUTO
+                        content=lista_check,
+                        height=list_h,
                         border=ft.border.all(1, ft.Colors.ORANGE_200),
                         border_radius=10,
                         padding=6,

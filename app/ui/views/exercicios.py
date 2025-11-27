@@ -9,7 +9,8 @@ def show_exercicios(page: ft.Page, on_back):
     set_appbar(page, "Exercícios", None, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
-    is_small = (page.width or 0) <= 420
+    pw = int(page.width or 0)
+    is_small = pw <= 420
 
     nome = ft.TextField(label="Nome do exercício", expand=1)
     grupo = ft.TextField(label="Grupo muscular", width=160 if is_small else 220, hint_text="Peito, Costas, Pernas…")
@@ -102,6 +103,22 @@ def show_exercicios(page: ft.Page, on_back):
     busca.on_change = lambda e: carregar(busca.value)
     busca.on_submit = lambda e: carregar(busca.value)
 
+    # Altura da lista proporcional para caber bem em celulares
+    ph = int(page.height or 640)
+    list_h = max(240, min(520, ph - 300))
+
+    if is_small:
+        # Campos empilhados para evitar sobreposição
+        top_controls: list[ft.Control] = [
+            nome,
+            ft.Row([grupo], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row([ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER),
+        ]
+    else:
+        top_controls = [
+            ft.Row([nome, grupo, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True)
+        ]
+
     page.add(
         with_bg(
             page,
@@ -111,12 +128,13 @@ def show_exercicios(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Catálogo de Exercícios", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([nome, grupo, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True),
+                    *top_controls,
                     ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                     status,
                     ft.Container(
-                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
-                        height=400,
+                        # Removido ft.Scrollbar: não existe no Flet atual; o Column já tem scroll habilitado
+                        content=lista,
+                        height=list_h,
                         border=ft.border.all(1, ft.Colors.BLUE_200),
                         border_radius=10,
                         padding=6,

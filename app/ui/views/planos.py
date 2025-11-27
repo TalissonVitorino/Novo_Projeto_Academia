@@ -9,7 +9,8 @@ def show_planos(page: ft.Page, on_back):
     set_appbar(page, "Planos de Treino", None, show_back=True, on_back=lambda e=None: on_back())
 
     # Responsividade simples
-    is_small = (page.width or 0) <= 420
+    pw = int(page.width or 0)
+    is_small = pw <= 420
 
     nome_plano = ft.TextField(label="Nome do plano (ex.: Treino A)", expand=1)
     busca = ft.TextField(label="Buscar plano", prefix_icon=ft.Icons.SEARCH, expand=1)
@@ -58,10 +59,12 @@ def show_planos(page: ft.Page, on_back):
                         ft.PopupMenuItem(
                             text="Editar exercícios",
                             icon=ft.Icons.LIST,
+                            data="0",
                         ),
                         ft.PopupMenuItem(
                             text="Excluir",
                             icon=ft.Icons.DELETE,
+                            data="1",
                         ),
                     ]
                 )
@@ -246,6 +249,20 @@ def show_planos(page: ft.Page, on_back):
     busca.on_change = lambda e: carregar(busca.value)
     busca.on_submit = lambda e: carregar(busca.value)
 
+    # Altura da lista proporcional à tela
+    ph = int(page.height or 640)
+    list_h = max(240, min(520, ph - 300))
+
+    if is_small:
+        header_controls: list[ft.Control] = [
+            nome_plano,
+            ft.Row([ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER),
+        ]
+    else:
+        header_controls = [
+            ft.Row([nome_plano, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True)
+        ]
+
     page.add(
         with_bg(
             page,
@@ -255,12 +272,13 @@ def show_planos(page: ft.Page, on_back):
                 controls=[
                     ft.Text("Planos de Treino", size=22, weight=ft.FontWeight.BOLD),
                     ft.Divider(),
-                    ft.Row([nome_plano, ft.ElevatedButton("Salvar", icon=ft.Icons.SAVE, on_click=salvar)], alignment=ft.MainAxisAlignment.CENTER, spacing=10, run_spacing=10, wrap=True),
+                    *header_controls,
                     ft.Row([busca], alignment=ft.MainAxisAlignment.CENTER),
                     status,
                     ft.Container(
-                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
-                        height=400,
+                        # Removido ft.Scrollbar: Flet atual não possui esse componente; Column já rola com scroll=AUTO
+                        content=lista,
+                        height=list_h,
                         border=ft.border.all(1, ft.Colors.BLUE_200),
                         border_radius=10,
                         padding=6,

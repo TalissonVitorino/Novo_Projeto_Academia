@@ -205,7 +205,8 @@ def show_relatorios(page: ft.Page, on_back):
                     ft.Row([busca_aluno], alignment=ft.MainAxisAlignment.CENTER),
                     status,
                     ft.Container(
-                        content=ft.Scrollbar(content=lista, thumb_visibility=True, interactive=True),
+                        # Removido ft.Scrollbar: não existe no Flet atual; Column já rola com scroll=AUTO
+                        content=lista,
                         height=420,
                         border=ft.border.all(1, ft.Colors.BLUE_GREY_200),
                         border_radius=10,
