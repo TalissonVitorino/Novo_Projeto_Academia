@@ -7,9 +7,6 @@ from app.config import Theme
 from app.utils import validar_data_brasil, sqlite_para_brasileiro, calcular_imc
 
 
-# =============== UTILITÁRIOS ===============
-# Utilitários foram movidos para app.utils
-
 # =============== APLICATIVO ===============
 
 def main(page: ft.Page):
