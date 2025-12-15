@@ -33,7 +33,7 @@ def main(page: ft.Page):
     page.window_height = Theme.WINDOW_HEIGHT
 
     # ---------- Helpers de UI (gradiente e cores por tema) ----------
-    # Guardamos referências para atualizar imediatamente quando o tema muda
+    # Guardei referências para atualizar imediatamente quando o tema muda
     current_bg_container: ft.Container | None = None
     last_appbar_state = {
         "title": page.title,
