@@ -1,83 +1,34 @@
-# Checklist de Treino (Academia)
+# Checklist de Treino
 
-Aplicativo de controle de treinos para academias, desenvolvido com Flet (Python) e SQLite.
-
-Este projeto foi pensado para ser simples, funcional e acessível, priorizando o uso local e offline, sem depender de infraestrutura pesada, servidores externos ou conexão constante com a internet. O objetivo é facilitar o dia a dia do instrutor ou do próprio aluno, oferecendo um fluxo direto para cadastro, organização de treinos e acompanhamento das sessões realizadas.
-
-O sistema possui interface visual moderna, suporte a tema claro e escuro e pode ser executado como aplicação desktop. Também é possível adaptá-lo para execução via web ou mobile utilizando os recursos oferecidos pelo Flet.
+App desktop de controle de treinos para academias com **Flet** (Python) e **SQLite**. Executável localmente sem dependência de servidor externo.
 
 ---
 
-## Por que este projeto existe
+## Funcionalidades
 
-Grande parte dos sistemas de academia disponíveis no mercado são complexos, exigem conexão constante com a internet e possuem fluxos excessivamente burocráticos para tarefas simples do dia a dia.
-
-Este projeto nasce com a proposta de oferecer:
-- Um fluxo enxuto
-- Execução local
-- Rapidez no uso
-- Foco no essencial: aluno, treino e histórico
-
-Ele pode ser utilizado tanto como ferramenta real quanto como projeto de estudo, demonstração técnica ou base para evolução futura.
+| Funcionalidade | Descrição |
+|---|---|
+| Cadastro de alunos | Nome, data de nascimento e ficha |
+| Treinos | Cadastro e organização de exercícios por aluno |
+| Histórico | Registro de sessões realizadas |
+| Dashboard | Indicadores gerais de uso |
+| Tema | Suporte a modo claro e escuro |
 
 ---
 
-## Principais recursos
+## Stack
 
-O sistema oferece os seguintes recursos principais:
-
-- Interface visual moderna com suporte a tema claro e escuro
-- Dashboard com indicadores gerais:
-  - Quantidade de alunos
-  - Quantidade de planos de treino
-  - Quantidade de sessões realizadas
-- Cadastro de alunos:
-  - Nome
-  - Data de nascimento
-  - Altura
-  - Peso
-- Cadastro de exercícios:
-  - Nome
-  - Grupo muscular
-- Criação de planos de treino:
-  - Lista ordenada de exercícios
-  - Séries e repetições por exercício
-- Sessão de treino no formato checklist:
-  - Marcação do que foi executado
-  - Registro de médias de repetições
-  - Registro de médias de peso
-  - Observações livres
-- Relatórios de sessões já realizadas
-- Banco de dados local SQLite, criado automaticamente na primeira execução
+| Biblioteca | Uso |
+|---|---|
+| Python 3.10+ | Linguagem |
+| Flet | GUI declarativa (desktop/web) |
+| SQLite | Banco de dados local |
 
 ---
 
-## Stack técnica
+## Como executar
 
-Tecnologias utilizadas no projeto:
-
-- Linguagem: Python 3.10 ou superior
-- Interface gráfica: Flet
-- Banco de dados: SQLite
-- Organização do código: separação por módulos (UI, banco, configuração e utilidades)
-
-O Flet permite criar interfaces gráficas utilizando apenas Python, enquanto utiliza o Flutter internamente para renderização visual. Isso possibilita uma UI moderna sem a necessidade de HTML, CSS ou JavaScript.
-
----
-
-## Requisitos
-
-Para executar o projeto é necessário:
-
-- Python 3.10 ou superior
-- Pip (gerenciador de pacotes Python)
-
-É recomendado, mas não obrigatório, o uso de ambiente virtual (venv).
-
----
-
-## Instalação
-
-Criação e ativação do ambiente virtual (opcional, mas recomendado):
-
-Windows:
+```shell
+pip install flet
+python main.py
+```
